@@ -37,9 +37,12 @@ let
     inherit overlays;
     system = "x86_64-linux";
   };
+  ghc = pkgs.haskellPackages.ghcWithPackages
+    (p: [ p.clash-ghc p.clashilator p.retroclash-sim p.clash-shake ]);
 
 in {
   pkgs = pkgs;
-  ghc =
-    pkgs.haskellPackages.ghcWithPackages (p: [ p.clash-ghc p.retroclash-sim ]);
+  ghc = ghc;
+  shell =
+    pkgs.mkShell { buildInputs = [ pkgs.verilator pkgs.pkg-config ghc ]; };
 }
