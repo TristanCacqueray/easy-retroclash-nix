@@ -1,0 +1,27 @@
+# Container instruction adapted from:
+#  https://symbiflow-examples.readthedocs.io/en/latest/getting-symbiflow.html
+FROM registry.centos.org/centos:7
+
+RUN yum update -y && yum install -y git which xz rsync
+
+ENV FPGA_FAM=xc7
+ENV INSTALL_ROOT="/opt/symbiflow/envs/${FPGA_FAM}/install"
+ENV CONDA_ROOT="/opt/conda/envs/${FPGA_FAM}"
+
+# Install conda
+RUN curl -o /bin/conda_installer.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh && bash /bin/conda_installer.sh -u -b -p /opt/conda
+
+# Install symbiflow toolchain
+RUN git clone https://github.com/SymbiFlow/symbiflow-examples /tmp/examples --depth 1 && \
+  cd /tmp/examples && source "/opt/conda/etc/profile.d/conda.sh" && conda env create -f $FPGA_FAM/environment.yml && \
+  rm -Rf /tmp/examples
+
+# Install arch-defs
+RUN mkdir -p ${INSTALL_ROOT} && \
+  curl -L https://storage.googleapis.com/symbiflow-arch-defs/artifacts/prod/foss-fpga-tools/symbiflow-arch-defs/continuous/install/459/20211116-000105/symbiflow-arch-defs-install-ef6fff3c.tar.xz | tar -xJC ${INSTALL_ROOT} && \
+  curl -L https://storage.googleapis.com/symbiflow-arch-defs/artifacts/prod/foss-fpga-tools/symbiflow-arch-defs/continuous/install/459/20211116-000105/symbiflow-arch-defs-xc7a50t_test-ef6fff3c.tar.xz | tar -xJC ${INSTALL_ROOT}
+
+# Setup the environment
+RUN echo IyEvYmluL2Jhc2gKCnNvdXJjZSAiL29wdC9jb25kYS9ldGMvcHJvZmlsZS5kL2NvbmRhLnNoIgoKZXhlYyAiJEAiCg== | base64 -d > /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
+ENV PATH="${INSTALL_ROOT}/bin:${CONDA_ROOT}/bin:${PATH}"
+ENTRYPOINT ["/docker-entrypoint.sh"]

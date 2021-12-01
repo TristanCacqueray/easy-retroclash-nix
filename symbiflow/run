@@ -1,0 +1,27 @@
+#!/bin/python3
+# SPDX-License-Identifier: Apache-2.0
+
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+image = "localhost/symbiflow-centos"
+cwd = Path(os.getcwd())
+
+# Map the host project to /src and preserve the relative work dir
+if cwd.parent.name == "_build":
+    project_root = cwd.parent.parent
+    work = "_build/" + cwd.name
+else:
+    project_root = cwd
+    work = ""
+
+cmd = (
+    ["podman", "run", "--rm", "-v"]
+    + [str(project_root) + ":/src:Z", "-w", "/src/" + work]
+    + [image]
+    + sys.argv[1:]
+)
+if subprocess.Popen(cmd).wait():
+    exit(1)
