@@ -20,6 +20,17 @@ let
               broken = false;
             });
 
+          clash-shake = pkgs.haskell.lib.overrideCabal hpPrev.clash-shake {
+            patches = [
+              # See https://github.com/gergoerdi/clash-shake/pull/4
+              (pkgs.fetchpatch {
+                url =
+                  "https://github.com/gergoerdi/clash-shake/commit/7309a84ac8260562d35ec3aeb4e39f24a0f450bd.patch";
+                sha256 = "sha256-tI+5/FQA1P7+h+Q4pCCGuVO61Lds0xANAoD8UXddd/I=";
+              })
+            ];
+          };
+
           # retroclash-sim = hpPrev.callCabal2nix "retroclash-sim"
           #   (pkgs.fetchFromGitHub {
           #     owner = "gergoerdi";
